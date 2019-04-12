@@ -11,6 +11,7 @@ const getCurrentDirName = () => {
     return __dirname.substr(i >= 0 ? i + 1 : i);
 };
 
+// TODO: determine path based on OS - process.platform === "win32"
 const sshKeyPath = `${process.env['USERPROFILE']}\\.ssh\\id_rsa`;
 const basePath = path.resolve(__dirname, '..');  // c:\Dev\invia
 
@@ -34,7 +35,7 @@ for (dir of watchedDirs) {
 const sshOptions = {
     host: 'centos',
     username: 'invia',
-    privateKey: fs.readFileSync(sshKeyPath)
+    privateKey: fs.readFileSync(sshKeyPath)  // TODO: handle error if not exists
 };
 
 const watchOptions = {
@@ -124,7 +125,7 @@ const notify = (msg) => {
     notifier.notify({
         title: 'invia-repo-sync',
         message: msg,
-        //icon: path.join(__dirname, 'coulson.jpg'), // Absolute path (doesn't work on balloons)
+        icon: path.join(__dirname, 'invia-logo.png'),
         wait: false
     });
 };
