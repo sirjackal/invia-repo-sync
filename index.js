@@ -5,18 +5,18 @@ const fs = require('fs');
 const git = require('simple-git');
 const sshClient = require('ssh2').Client;
 const notifier = require('node-notifier');
+const readlineSync = require('readline-sync');
 
-const getCurrentDirName = () => {
-    const i = __dirname.lastIndexOf(path.sep);
-    return __dirname.substr(i >= 0 ? i + 1 : i);
-};
+// if (!readlineSync.keyInYN('All git repositories will be reseted. Do you really want to continue?')) {
+//     process.exit();
+// }
 
-// TODO: determine path based on OS - process.platform === "win32"
+// TODO: determine default SSH keys path based on OS - process.platform === "win32"
 const sshKeyPath = `${process.env['USERPROFILE']}\\.ssh\\id_rsa`;
 const basePath = path.resolve(__dirname, '..');  // c:\Dev\invia
 
-console.log('basePath', basePath);
-console.log('sshKeyPath', sshKeyPath);
+console.log('basePath:', basePath);
+console.log('sshKeyPath:', sshKeyPath);
 
 const watchedDirs = [
    'web',
@@ -27,15 +27,22 @@ for (dir of watchedDirs) {
     // take just 'library' from 'library/Invia/**'
     let repoPath = dir.replace(/^([^\\/]+).*$/, '$1');
     repoPath = path.resolve(basePath, repoPath);
-    console.log(`Repository ${repoPath}: git reset --hard`);
-    // TODO: add user prompt
-    git(repoPath).reset('hard');
+
+    if (readlineSync.keyInYN(`Do you want to reset git repository '${repoPath}'?`)) {
+        git(repoPath).reset('hard');
+        console.log(`Repository '${repoPath}': git reset --hard`);
+    }
 }
 
 const sshOptions = {
     host: 'centos',
     username: 'invia',
     privateKey: fs.readFileSync(sshKeyPath)  // TODO: handle error if not exists
+};
+
+const getCurrentDirName = () => {
+    const i = __dirname.lastIndexOf(path.sep);
+    return __dirname.substr(i >= 0 ? i + 1 : 0);
 };
 
 const watchOptions = {
