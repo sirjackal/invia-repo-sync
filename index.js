@@ -7,16 +7,14 @@ const sshClient = require('ssh2').Client;
 const notifier = require('node-notifier');
 const readlineSync = require('readline-sync');
 
-// if (!readlineSync.keyInYN('All git repositories will be reseted. Do you really want to continue?')) {
-//     process.exit();
-// }
-
 // TODO: determine default SSH keys path based on OS - process.platform === "win32"
 const sshKeyPath = `${process.env['USERPROFILE']}\\.ssh\\id_rsa`;
 const basePath = path.resolve(__dirname, '..');  // c:\Dev\invia
 
 console.log('basePath:', basePath);
 console.log('sshKeyPath:', sshKeyPath);
+
+// TODO: try to connect to VM
 
 const watchedDirs = [
    'web',
@@ -29,7 +27,7 @@ for (dir of watchedDirs) {
     repoPath = path.resolve(basePath, repoPath);
 
     if (readlineSync.keyInYN(`Do you want to reset git repository '${repoPath}'?`)) {
-        git(repoPath).reset('hard');
+        git(repoPath).reset('hard').pull();
         console.log(`Repository '${repoPath}': git reset --hard`);
     }
 }
@@ -47,7 +45,7 @@ const getCurrentDirName = () => {
 
 const watchOptions = {
     cwd: basePath,
-    ignored: [getCurrentDirName() + '/*', '**/node_modules/**', '**/*.{png,jpg,gif,svg,ico}'],
+    ignored: [getCurrentDirName() + '/*', '.git/**', '**/node_modules/**', '**/*.{png,jpg,gif,svg,ico}'],
     followSymlinks: false
 };
 
@@ -71,6 +69,7 @@ watcher.on('all', (event, winRelPath) => {
 
         let linuxPath = `/var/invia/${winRelPath}`.replace(/\\/g, '/');
 
+        // TODO: functions are async and some errors aren't caught
         switch (event) {
             case 'add':
             case 'change':
